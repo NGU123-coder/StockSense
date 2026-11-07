@@ -1,0 +1,86 @@
+# Free portfolio deployment. Uses an external Supabase Postgres database.
+# Select this file as the Blueprint path instead of render.yaml.
+# Free web services sleep on inactivity; scheduled work is not guaranteed.
+services:
+  - type: web
+    name: stocksense-forecast-free
+    runtime: docker
+    plan: free
+    region: singapore
+    rootDir: forecast-service
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: INTERNAL_API_KEY
+        generateValue: true
+      - key: WORKERS
+        value: "1"
+
+  - type: keyvalue
+    name: stocksense-redis-free
+    plan: free
+    region: singapore
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+
+  - type: web
+    name: stocksense-api-free
+    runtime: docker
+    plan: free
+    region: singapore
+    rootDir: backend
+    healthCheckPath: /api/health
+    dockerCommand: >-
+      sh -c 'export FORECAST_SERVICE_URL="https://$FORECAST_HOST";
+      node dist/db/migrate.js && exec node dist/index.js'
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromService:
+          type: web
+          name: stocksense-forecast-free
+          envVarKey: DATABASE_URL
+      - key: INTERNAL_API_KEY
+        fromService:
+          type: web
+          name: stocksense-forecast-free
+          envVarKey: INTERNAL_API_KEY
+      - key: FORECAST_HOST
+        fromService:
+          type: web
+          name: stocksense-forecast-free
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: stocksense-redis-free
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: COOKIE_SAMESITE
+        value: none
+      - key: COOKIE_SECURE
+        value: "true"
+
+  - type: web
+    name: stocksense-frontend-free
+    runtime: static
+    rootDir: frontend
+    buildCommand: VITE_API_URL="https://$API_HOST" npm ci && VITE_API_URL="https://$API_HOST" npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: API_HOST
+        fromService:
+          type: web
+          name: stocksense-api-free
+          envVarKey: RENDER_EXTERNAL_HOSTNAME
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
