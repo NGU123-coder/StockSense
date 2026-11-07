@@ -14,6 +14,14 @@ services:
     generateValue: true
   - key: WORKERS
     value: '1'
+  - key: OPENBLAS_NUM_THREADS
+    value: '1'
+  - key: OMP_NUM_THREADS
+    value: '1'
+  - key: MKL_NUM_THREADS
+    value: '1'
+  - key: NUMEXPR_NUM_THREADS
+    value: '1'
 - type: web
   name: stocksense-api-free
   runtime: docker

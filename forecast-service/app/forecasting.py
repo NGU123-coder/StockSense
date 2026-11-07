@@ -91,7 +91,7 @@ def _holt_winters(history: pd.Series, horizon: int) -> tuple[np.ndarray, np.ndar
             seasonal="add",
             seasonal_periods=7,
             initialization_method="estimated",
-        ).fit(optimized=True)
+        ).fit(optimized=True, use_brute=False)
     return np.asarray(model.forecast(horizon)), np.asarray(model.resid)
 
 
