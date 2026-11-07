@@ -29,3 +29,6 @@ npm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+# Deployment seed output and TypeScript build metadata
+dist-seed/
+*.tsbuildinfo
