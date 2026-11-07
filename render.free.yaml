@@ -1,6 +1,4 @@
-# Free portfolio deployment with external Supabase Postgres.
-# Redis is optional and omitted: forecasts run on demand, without a nightly queue.
-# Render free web services sleep on inactivity.
+# Free portfolio deployment. Redis is omitted; forecasts run on demand.
 services:
 - type: web
   name: stocksense-forecast-free
@@ -23,8 +21,7 @@ services:
   region: singapore
   rootDir: backend
   healthCheckPath: /api/health
-  dockerCommand: sh -c 'export FORECAST_SERVICE_URL="https://$FORECAST_HOST"; node
-    dist/db/migrate.js && exec node dist/index.js'
+  dockerCommand: sh scripts/start-render.sh
   envVars:
   - key: NODE_ENV
     value: production
@@ -53,6 +50,8 @@ services:
     value: 'true'
   - key: ENABLE_JOBS
     value: 'false'
+  - key: SEED_DEMO_IF_EMPTY
+    value: 'true'
 - type: web
   name: stocksense-frontend-free
   runtime: static
