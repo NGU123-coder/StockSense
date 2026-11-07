@@ -38,7 +38,8 @@ export async function callForecastService(body: Record<string, unknown>): Promis
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(120_000),
     });
-  } catch {
+  } catch (error) {
+    console.warn('Forecasting request failed:', error);
     throw new HttpError(503, 'Forecasting service is not reachable');
   }
   if (!res.ok) {
@@ -50,9 +51,10 @@ export async function callForecastService(body: Record<string, unknown>): Promis
 
 export async function forecastServiceHealthy(): Promise<boolean> {
   try {
-    const res = await fetch(`${env.FORECAST_SERVICE_URL}/health`, { signal: AbortSignal.timeout(2000) });
+    const res = await fetch(`${env.FORECAST_SERVICE_URL}/health`, { signal: AbortSignal.timeout(10_000) });
     return res.ok;
-  } catch {
+  } catch (error) {
+    console.warn('Forecasting health check failed:', error);
     return false;
   }
 }
