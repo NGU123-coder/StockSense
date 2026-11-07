@@ -1,0 +1,15 @@
+[project]
+name = "stocksense-forecast"
+version = "1.0.0"
+description = "StockSense demand forecasting and inventory policy service"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

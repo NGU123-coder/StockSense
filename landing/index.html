@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en-IN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StockSense — Inventory and demand forecasting for distributors</title>
+    <meta name="description" content="Forecast demand for every product in every warehouse, reorder at the right time, and free up cash stuck in slow stock." />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="nav">
+      <a class="brand" href="#top" aria-label="StockSense home">
+        <img src="favicon.svg" width="28" height="28" alt="" />
+        <span>StockSense</span>
+      </a>
+      <nav aria-label="Page">
+        <a href="#calculator">Try it</a>
+        <a href="#how">How it works</a>
+        <a href="#stack">Built with</a>
+        <a class="button button--light" data-app-link href="http://localhost:5173">Open the app</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero__copy">
+          <h1>Reorder before the shelf goes empty.</h1>
+          <p class="lead">
+            StockSense forecasts demand for every product in every warehouse, tells your purchase team exactly how
+            much to order and when, and shows the cash sitting idle in slow-moving stock.
+          </p>
+          <div class="hero__actions">
+            <a class="button button--signal" data-app-link href="http://localhost:5173">See the live demo</a>
+            <a class="button button--ghost" href="#calculator">Work out a reorder point</a>
+          </div>
+          <p class="hero__note">Demo login: manager@stocksense.in / Demo@1234</p>
+        </div>
+
+        <!-- The interactive calculator is the hero: the product's core idea, in your hands. -->
+        <section class="calc" id="calculator" aria-labelledby="calc-title">
+          <h2 id="calc-title">When should you reorder?</h2>
+          <p class="calc__sub">Change the numbers for one product. The runway updates as you type.</p>
+
+          <form class="calc__form" id="calc-form">
+            <label>Units sold per day <input type="number" name="daily" value="60" min="0" step="1" /></label>
+            <label>Day-to-day variation <input type="number" name="sigma" value="12" min="0" step="1" /></label>
+            <label>Supplier lead time (days) <input type="number" name="lead" value="6" min="1" step="1" /></label>
+            <label>Units on hand <input type="number" name="onhand" value="320" min="0" step="1" /></label>
+            <label class="calc__wide">Chance of not running out
+              <select name="service">
+                <option value="1.282">90%</option>
+                <option value="1.645" selected>95%</option>
+                <option value="1.960">97.5%</option>
+                <option value="2.326">99%</option>
+              </select>
+            </label>
+          </form>
+
+          <div class="runway" aria-hidden="true">
+            <div class="runway__safety" id="rw-safety"></div>
+            <div class="runway__fill" id="rw-fill"></div>
+            <div class="runway__tick" id="rw-tick"><span id="rw-tick-label"></span></div>
+          </div>
+
+          <dl class="calc__out" aria-live="polite">
+            <div><dt>Safety stock</dt><dd id="out-safety">—</dd></div>
+            <div><dt>Reorder point</dt><dd id="out-rop">—</dd></div>
+            <div><dt>Runs out in</dt><dd id="out-cover">—</dd></div>
+          </dl>
+          <p class="calc__verdict" id="out-verdict"></p>
+          <p class="calc__formula" id="out-formula"></p>
+        </section>
+      </section>
+
+      <section class="problem">
+        <h2>Two ways distributors lose money</h2>
+        <div class="problem__grid">
+          <article>
+            <h3>Fast sellers run out</h3>
+            <p>Orders go in by gut feel or a fixed monthly rhythm. A festive spike or a late supplier empties the shelf, and the customer buys elsewhere.</p>
+          </article>
+          <article>
+            <h3>Slow stock eats cash</h3>
+            <p>Meanwhile the warehouse holds four months of an item that sells six units a day. That money could have bought the products that are running out.</p>
+          </article>
+          <article>
+            <h3>Nobody sees the whole picture</h3>
+            <p>Stock lives in four warehouses and three spreadsheets. By the time the numbers are combined, the decision is already late.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="how" id="how">
+        <h2>How it works</h2>
+        <ol class="steps">
+          <li>
+            <h3>Forecast every product, every night</h3>
+            <p>A Python service fits a Holt-Winters model to each product’s daily sales in each warehouse, learning its weekly rhythm and trend, and checks its own accuracy on the last four weeks.</p>
+          </li>
+          <li>
+            <h3>Turn forecasts into a buying plan</h3>
+            <p>Lead time, demand variation and your target service level become a safety stock, a reorder point and an order quantity, with stock already on order taken into account.</p>
+          </li>
+          <li>
+            <h3>Order in one click, with approval</h3>
+            <p>The planner drafts purchase orders grouped by supplier. A manager approves them, the supplier gets a PDF, and receiving the goods updates stock everywhere in real time.</p>
+          </li>
+        </ol>
+      </section>
+
+      <section class="stack" id="stack">
+        <h2>Built with</h2>
+        <p class="stack__lead">A production-style setup: two services, one database, real-time updates and tests at every layer.</p>
+        <dl class="stack__grid">
+          <div><dt>Frontend</dt><dd>React 19, TypeScript, Tailwind CSS, TanStack Query, React Hook Form, Zod, Recharts, ZXing barcode scanning</dd></div>
+          <div><dt>Core API</dt><dd>Node.js, Express 5, Drizzle ORM, JWT with rotating refresh tokens, role-based access, Socket.io, BullMQ</dd></div>
+          <div><dt>Forecasting</dt><dd>FastAPI, pandas, statsmodels (Holt-Winters), SciPy, parallel model fitting</dd></div>
+          <div><dt>Data</dt><dd>PostgreSQL with row locking and constraints, Redis for caching and job queues</dd></div>
+          <div><dt>Quality</dt><dd>Jest and Supertest, Pytest, Vitest, ESLint, Ruff, GitHub Actions</dd></div>
+          <div><dt>Delivery</dt><dd>Docker Compose locally, Vercel and Render in production</dd></div>
+        </dl>
+      </section>
+
+      <section class="cta">
+        <h2>See it with a year of real-looking data</h2>
+        <p>Four warehouses, forty products, eleven purchase orders and 58,000 days of sales history.</p>
+        <a class="button button--signal" data-app-link href="http://localhost:5173">Open the demo</a>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>StockSense is a portfolio project. Product names and suppliers are fictional.</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,0 +1,50 @@
+# Render Blueprint: API, forecasting service, Postgres and Redis in one click.
+# The frontend deploys separately to Vercel (see README).
+services:
+  - type: web
+    name: stocksense-api
+    runtime: docker
+    rootDir: backend
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase: { name: stocksense-db, property: connectionString }
+      - key: REDIS_URL
+        fromService: { type: keyvalue, name: stocksense-redis, property: connectionString }
+      - key: FORECAST_SERVICE_URL
+        value: http://stocksense-forecast:8000 # private network address; check it under the service's "Connect" tab
+      - key: INTERNAL_API_KEY
+        generateValue: true
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: CLIENT_ORIGIN
+        sync: false # your Vercel URL, e.g. https://stocksense.vercel.app
+      - key: COOKIE_SAMESITE
+        value: none
+      - key: COOKIE_SECURE
+        value: "true"
+
+  - type: pserv
+    name: stocksense-forecast
+    runtime: docker
+    rootDir: forecast-service
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: stocksense-db, property: connectionString }
+      - key: INTERNAL_API_KEY
+        fromService: { type: web, name: stocksense-api, envVarKey: INTERNAL_API_KEY }
+      - key: WORKERS
+        value: "1"
+
+  - type: keyvalue
+    name: stocksense-redis
+    ipAllowList: []
+
+databases:
+  - name: stocksense-db
+    databaseName: stocksense
+    user: stocksense

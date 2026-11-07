@@ -1,0 +1,101 @@
+# One command runs the whole system:
+#   docker compose up --build
+#   docker compose run --rm seed      # load the demo dataset (first time)
+#
+#   App            http://localhost:3000
+#   Landing page   http://localhost:8081
+#   API            http://localhost:4000/api/health
+#   Forecast docs  http://localhost:8000/docs
+
+name: stocksense
+
+x-secrets: &secrets
+  INTERNAL_API_KEY: ${INTERNAL_API_KEY:-local-internal-key}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: stocksense
+      POSTGRES_PASSWORD: stocksense
+      POSTGRES_DB: stocksense
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stocksense"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  forecast:
+    build: ./forecast-service
+    environment:
+      <<: *secrets
+      DATABASE_URL: postgresql://stocksense:stocksense@postgres:5432/stocksense
+      WORKERS: 2
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  backend:
+    build: ./backend
+    environment:
+      <<: *secrets
+      NODE_ENV: production
+      DATABASE_URL: postgresql://stocksense:stocksense@postgres:5432/stocksense
+      REDIS_URL: redis://redis:6379
+      FORECAST_SERVICE_URL: http://forecast:8000
+      CLIENT_ORIGIN: http://localhost:3000
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-local-access-secret-change-me}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-local-refresh-secret-change-me}
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      forecast: { condition: service_started }
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+  landing:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./landing:/usr/share/nginx/html:ro
+    ports:
+      - "8081:80"
+
+  # One-off: docker compose run --rm seed
+  seed:
+    build:
+      context: ./backend
+      target: build
+    command: sh -c "npx tsx src/db/migrate.ts && npx tsx scripts/seed.ts"
+    environment:
+      <<: *secrets
+      DATABASE_URL: postgresql://stocksense:stocksense@postgres:5432/stocksense
+      REDIS_URL: redis://redis:6379
+      FORECAST_SERVICE_URL: http://forecast:8000
+      JWT_ACCESS_SECRET: seed-only-access-secret
+      JWT_REFRESH_SECRET: seed-only-refresh-secret
+      ENABLE_JOBS: "false"
+    depends_on:
+      postgres: { condition: service_healthy }
+      forecast: { condition: service_started }
+    profiles: ["tools"]
+
+volumes:
+  pgdata:

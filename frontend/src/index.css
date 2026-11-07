@@ -1,0 +1,143 @@
+@import 'tailwindcss';
+
+/*
+ * StockSense design tokens
+ * Ink navy for structure, concrete greys for the floor, and signal amber
+ * reserved for one meaning only: "this needs action".
+ */
+@theme {
+  --font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+
+  --color-ink: #14213d;
+  --color-ink-2: #23335a;
+  --color-ink-3: #3a4b74;
+  --color-concrete: #f3f5f4;
+  --color-surface: #ffffff;
+  --color-line: #dde2e0;
+  --color-line-strong: #c6cdca;
+  --color-muted: #5c6b73;
+  --color-faint: #8a979d;
+
+  --color-signal: #e8a317;
+  --color-signal-soft: #fdf3dc;
+  --color-signal-ink: #8a5a00;
+
+  --color-stock: #2f7d5b;
+  --color-stock-soft: #e3f1ea;
+  --color-out: #c2412d;
+  --color-out-soft: #fbe7e3;
+  --color-sky: #3f6fb5;
+  --color-sky-soft: #e5edf8;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    font-variation-settings: 'wdth' 100;
+    color: var(--color-ink);
+    background: var(--color-concrete);
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  /* Every number in the app lines up in columns. */
+  .num,
+  table,
+  input[type='number'] {
+    font-variant-numeric: tabular-nums;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-sky);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@utility font-wide {
+  font-variation-settings: 'wdth' 118;
+  letter-spacing: -0.01em;
+}
+@utility font-narrow {
+  font-variation-settings: 'wdth' 82;
+}
+
+/* Buttons are utilities so variants can build on the base with @apply. */
+@utility btn {
+  @apply inline-flex h-9 items-center justify-center gap-2 rounded-[var(--radius-md)] px-3.5 text-[13px] font-semibold whitespace-nowrap transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+}
+@utility btn-primary {
+  @apply btn bg-ink text-white hover:bg-ink-2;
+}
+@utility btn-signal {
+  @apply btn bg-signal text-ink hover:bg-[#d69410];
+}
+@utility btn-ghost {
+  @apply btn border border-line bg-surface text-ink hover:border-line-strong hover:bg-concrete;
+}
+@utility btn-danger {
+  @apply btn border border-out/30 bg-surface text-out hover:bg-out-soft;
+}
+
+@layer components {
+  .page-title {
+    @apply font-wide text-[26px] leading-tight font-[750] text-ink;
+  }
+  .section-title {
+    @apply font-wide text-[15px] font-[700] text-ink;
+  }
+  .panel {
+    @apply rounded-[var(--radius-lg)] border border-line bg-surface;
+  }
+  .input {
+    @apply h-9 w-full rounded-[var(--radius-md)] border border-line bg-surface px-3 text-[13px] text-ink placeholder:text-faint focus:border-sky focus:outline-none focus-visible:outline-none focus:ring-2 focus:ring-sky/20;
+  }
+  .label {
+    @apply mb-1 block text-[12px] font-semibold text-muted;
+  }
+  .field-error {
+    @apply mt-1 text-[12px] text-out;
+  }
+  .table {
+    @apply w-full border-collapse text-[13px];
+  }
+  .table th {
+    @apply border-b border-line bg-concrete/60 px-4 py-2.5 text-left text-[12px] font-semibold whitespace-nowrap text-muted;
+  }
+  .table td {
+    @apply border-b border-line px-4 py-3 align-middle;
+  }
+  .table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .table tbody tr.row-link {
+    @apply cursor-pointer hover:bg-concrete/70;
+  }
+  .sku {
+    @apply font-narrow text-[12px] font-medium tracking-wide text-muted;
+  }
+}
+
+/* One orchestrated moment: the runway bars fill in when a screen first loads. */
+@keyframes runway-fill {
+  from {
+    transform: scaleX(0);
+  }
+}
+.runway-fill {
+  transform-origin: left;
+  animation: runway-fill 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
